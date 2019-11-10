@@ -1,0 +1,13 @@
+- name: Download audit2rbac
+  get_url:
+    url: https://github.com/liggitt/audit2rbac/releases/download/v0.7.0/audit2rbac-linux-386.tar.gz
+    dest: /root/audit2rbac-linux-386.tar.gz
+
+- name: unpackage
+  unarchive:
+    src: /root/audit2rbac-linux-386.tar.gz
+    dest: /root
+    remote_src: yes
+
+- name: udpate kubeconfig
+  shell: mkdir /root/.kube;cp /etc/kubernetes/admin.conf /root/.kube/config;cp /etc/kubernetes/admin.conf /root/.kube/config-admin

@@ -1,0 +1,12 @@
+---
+  - hosts: k8s
+    become: yes
+    become_user: root
+    
+    
+    tasks:
+      - include: deploy-master.yaml
+      - include: deploy-k8s.yaml
+      - include: ingress_setup.yaml
+      - include: deploy_openunison.yaml
+      - include: user_tasks.yaml

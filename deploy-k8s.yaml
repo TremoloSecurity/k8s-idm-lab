@@ -1,0 +1,28 @@
+
+- name: canal
+  shell: kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/canal.yaml
+  #shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: neable run on master
+  shell: kubectl taint nodes --all node-role.kubernetes.io/master-
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: nginx base
+  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: nginx bare metal
+  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: dashboard
+  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta4/aio/deploy/recommended.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+      
+      

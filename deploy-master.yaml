@@ -1,0 +1,54 @@
+
+- name: update cache
+  apt: 
+    update_cache: yes
+    
+- name: patch
+  apt:
+    name: "*"
+    state: latest
+
+- name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
+  shell: |
+    swapoff -a
+  
+  
+
+- name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+    replace: '# \1'
+  
+- name: reboot to apply patches
+  shell: sleep 5 && logger "Reboot triggered by Ansible script" && reboot
+  async: 1
+  poll: 0
+  
+- name: wait 30 seconds
+  pause: seconds=30
+
+- name: Wait 300 seconds, but only start checking after 60 seconds
+  wait_for_connection:
+    timeout: 300
+
+- name: copy docker install script
+  copy:
+    src: ./deploydocker.sh
+    dest: /root/deploydocker.sh
+    mode: u=rwx,g=rwx
+
+- name: run docker install
+  shell: /root/deploydocker.sh
+
+- name: copy k8s install script
+  copy:
+    src: ./deploy-kubeadm.sh
+    dest: /root/deploy-kubeadm.sh
+    mode: u=rwx,g=rwx
+
+- name: run k8s package install
+  shell: /root/deploy-kubeadm.sh
+
+- name: kubeadm
+  shell: kubeadm init --pod-network-cidr=10.244.0.0/16

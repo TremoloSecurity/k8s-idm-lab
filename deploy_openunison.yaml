@@ -1,0 +1,102 @@
+- name: mysql client
+  apt:
+    name: "mysql-client"
+
+- name: create mariadb dir
+  file:
+    path: /data/mariadb
+    state: directory
+    mode: '777'
+
+- name: copy mariadb yaml
+  copy:
+    src: ./mariadb_k8s.yaml
+    dest: /root/mariadb_k8s.yaml
+    mode: u=rw,g=rw
+
+- name: deploy mariadb
+  shell: kubectl apply -f /root/mariadb_k8s.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: copy db test script
+  copy:
+    src: ./test_mariadb_ready2.sh
+    dest: /root/test_mariadb_ready2.sh
+    mode: u=rwx,g=rwx
+
+- name: wait for mariadb
+  #shell: timeout 2m until kubectl exec -ti -n mariadb $(kubectl get pods -n mariadb -o json | jq -r .items[0].metadata.name) -- bash -c 'mysql -u root --password=start123 -e "SELECT 1;"'; do echo 'not ready' sleep 1; done; echo 'ready'
+  shell: timeout 10m bash -c '/root/test_mariadb_ready2.sh'
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+    PATH: "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+
+#- name: create unison database
+#  shell: kubectl exec -ti -n mariadb $(kubectl get pods -n mariadb -o json | jq -r .items[0].metadata.name) -- bash -c 'mysql -u root --password=start123 -e "create database unison;"'
+#  environment:
+#    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: copy smtp yaml
+  copy:
+    src: ./smtp_k8s.yaml
+    dest: /root/smtp_k8s.yaml
+    mode: u=rw,g=rw
+
+- name: deploy smtp
+  shell: kubectl apply -f /root/smtp_k8s.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: create opoenunison secrets dir
+  file:
+    path: /root/ou-secrets
+    state: directory
+    mode: u+rw,g+rw
+
+- name: template secret input.props
+  template:
+    src: ./input-secrets.props
+    dest: /root/ou-secrets/input.props
+
+- name: create opoenunison configmaps dir
+  file:
+    path: /root/ou-configmaps
+    state: directory
+    mode: u+rw,g+rw
+
+- name: template configmap input.props
+  template:
+    src: ./input-cfgmap.props
+    dest: /root/ou-configmaps/input.props
+
+- name: copy ldaps pem
+  copy:
+    src: ./ldaps.pem
+    dest: /root/ou-configmaps/trusted-ldaps.pem
+    mode: u=rw,g=rw
+
+- name: copy deploy script
+  copy:
+    src: ./deploy_openunison.sh
+    dest: /root/deploy_openunison.sh
+    mode: u=rwx,g=rwx
+
+#- name: wait 60 seconds
+#  pause: seconds=300
+
+- name: deploy openunison
+  shell: /root/deploy_openunison.sh
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: copy audit policy file
+  copy:
+    src: ./k8s-audit-policy.yaml
+    dest: /root/k8s-audit-policy.yaml
+
+- name: copy pod security policies
+  copy:
+    src: ./podsecuritypolicies.yaml
+    dest: /root/podsecuritypolicies.yaml
+    
