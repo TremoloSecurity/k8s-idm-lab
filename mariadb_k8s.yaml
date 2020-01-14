@@ -68,7 +68,6 @@ metadata:
   name: mariadb
   namespace: mariadb
 spec:
-  clusterIP: 10.100.90.223
   ports:
   - port: 3306
     protocol: TCP
