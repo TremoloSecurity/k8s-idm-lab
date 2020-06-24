@@ -10,18 +10,14 @@
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
-- name: nginx base
-  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
 
 - name: nginx bare metal
-  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/service-nodeport.yaml
+  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/baremetal/deploy.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
 - name: dashboard
-  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-rc5/aio/deploy/recommended.yaml
+  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
       
