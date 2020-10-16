@@ -5,24 +5,19 @@ metadata:
   name: mariadb
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
     app: mariadb
   name: mariadb
   namespace: mariadb
 spec:
-  progressDeadlineSeconds: 600
+  serviceName: mariadb
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: mariadb
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
   template:
     metadata:
       creationTimestamp: null
@@ -53,11 +48,14 @@ spec:
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
-      volumes:
-      - name: mariadb-data
-        hostPath:
-          path: /data/mariadb
-          type: Directory
+  volumeClaimTemplates:
+  - metadata:
+      name: mariadb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
 ---
 apiVersion: v1
 kind: Service

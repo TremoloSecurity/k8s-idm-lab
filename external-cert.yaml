@@ -1,0 +1,27 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openunison-external
+  namespace: openunison
+spec:
+  secretName: ou-tls-certificate
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  subject:
+    organizations:
+    - tremolosecurity
+  commonName: ext-cert
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+  - ou.apps.{{ hostvars[inventory_hostname]['inventory_hostname'] }}.nip.io
+  - k8sdb.apps.{{ hostvars[inventory_hostname]['inventory_hostname'] }}.nip.io
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer

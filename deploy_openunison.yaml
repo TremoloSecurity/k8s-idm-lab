@@ -1,12 +1,53 @@
+- name: deploy certmanager
+  shell: kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.3/cert-manager.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+
+
+
+- name: copy ca secret
+  copy:
+    src: ./ca-cert-secret.yaml
+    dest: /root/ca-cert-secret.yaml
+    mode: u=rwx,g=rwx
+
+- name: create ca secret
+  shell: kubectl apply -f /root/ca-cert-secret.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: copy ca definition
+  copy:
+    src: ./certmanager-ca.yaml
+    dest: /root/certmanager-ca.yaml
+    mode: u=rwx,g=rwx
+
+
+
+- name: rancher local path provisioning
+  shell: kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.16/deploy/local-path-storage.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+
 - name: mysql client
   apt:
     name: "mysql-client"
 
-- name: create mariadb dir
-  file:
-    path: /data/mariadb
-    state: directory
-    mode: '777'
+- name: helm
+  shell: snap install helm --classic
+
+- name: set default storage class
+  shell: "kubectl patch storageclass local-path -p '{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}'"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+#- name: create mariadb dir
+#  file:
+#    path: /data/mariadb
+#    state: directory
+#    mode: '777'
 
 - name: copy mariadb yaml
   copy:
@@ -37,56 +78,73 @@
 #  environment:
 #    KUBECONFIG: /etc/kubernetes/admin.conf
 
-- name: copy smtp yaml
-  copy:
-    src: ./smtp_k8s.yaml
-    dest: /root/smtp_k8s.yaml
-    mode: u=rw,g=rw
-
-- name: deploy smtp
-  shell: kubectl apply -f /root/smtp_k8s.yaml
+- name: create smtp black hole namespace
+  shell: kubectl create ns blackhole
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
-- name: create opoenunison secrets dir
-  file:
-    path: /root/ou-secrets
-    state: directory
-    mode: u+rw,g+rw
+- name: create smtp black hole deployment
+  shell: kubectl create deployment blackhole --image=tremolosecurity/smtp-blackhole -n blackhole
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
 
-- name: template secret input.props
+- name: create smtp black hole service
+  shell: kubectl expose deployment/blackhole --type=ClusterIP --port 1025 --target-port=1025 -n blackhole
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: create the openunison namespace
+  shell: kubectl create ns openunison
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: create ca 
+  shell: kubectl apply -f /root/certmanager-ca.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: template external certificate
   template:
-    src: ./input-secrets.props
-    dest: /root/ou-secrets/input.props
+    src: ./external-cert.yaml
+    dest: /root/external-cert.yaml
 
-- name: create opoenunison configmaps dir
-  file:
-    path: /root/ou-configmaps
-    state: directory
-    mode: u+rw,g+rw
+- name: create the external certificate
+  shell: kubectl create -f /root/external-cert.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf    
 
-- name: template configmap input.props
+- name: add tremolo helm repo
+  shell: helm repo add tremolo https://nexus.tremolo.io/repository/helm/
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: update helm
+  shell: helm repo update
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: deploy the operator
+  shell: helm install openunison tremolo/openunison-operator --namespace openunison
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: template openunison source secret
   template:
-    src: ./input-cfgmap.props
-    dest: /root/ou-configmaps/input.props
+    src: ./openunison-secrets.yaml
+    dest: /root/openunison-secrets.yaml
 
-- name: copy ldaps pem
-  copy:
-    src: ./ldaps.pem
-    dest: /root/ou-configmaps/trusted-ldaps.pem
-    mode: u=rw,g=rw
+- name: create secret
+  shell: kubectl create -f /root/openunison-secrets.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
 
-- name: copy deploy script
-  copy:
-    src: ./deploy_openunison.sh
-    dest: /root/deploy_openunison.sh
-    mode: u=rwx,g=rwx
+- name: template openunison values.yaml
+  template:
+    src: ./openunison-values.yaml
+    dest: /root/openunison-values.yaml
 
-#- name: wait 60 seconds
-#  pause: seconds=300
-
-- name: deploy openunison
-  shell: /root/deploy_openunison.sh
+- name: deploy openunison helmchart 
+  shell: helm install orchestra tremolo/openunison-k8s-activedirectory --namespace openunison -f /root/openunison-values.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
