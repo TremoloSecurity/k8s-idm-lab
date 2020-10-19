@@ -82,11 +82,11 @@ Grab some coffee, this will take 10-15 minutes to run.
 2. Setup kubectl using your token
 3. Try to create a NS `kubectl create ns mynewns`, it will fail
 4. Enable audit logging:
-  a. `mkdir /var/log/k8s`
-  b. `mkdir /etc/kubernetes/audit`
-  c. `cp k8s-audit-policy.yaml /etc/kubernetes/audit`
-  d. Edit `/etc/kubernetes/manifests/kube-apiserver.yaml`
-    a.  add to `command`
+    * `mkdir /var/log/k8s`
+    * `mkdir /etc/kubernetes/audit`
+    * `cp k8s-audit-policy.yaml /etc/kubernetes/audit`
+    * Edit `/etc/kubernetes/manifests/kube-apiserver.yaml`
+       * add to `command`
     ```
     - --audit-log-path=/var/log/k8s/audit.log
     - --audit-log-maxage=1
@@ -94,7 +94,7 @@ Grab some coffee, this will take 10-15 minutes to run.
     - --audit-log-maxsize=10
     - --audit-policy-file=/etc/kubernetes/audit/k8s-audit-policy.yaml
     ```
-    a.  add:
+      * add:
     ```
     - mountPath: /var/log/k8s
       name: var-log-k8s
@@ -104,7 +104,8 @@ Grab some coffee, this will take 10-15 minutes to run.
       readOnly: true
     ```
     to `volumeMounts` section
-    b. add:
+      
+      * add:
     ```
     - hostPath:
         path: /var/log/k8s
