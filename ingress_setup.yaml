@@ -3,9 +3,10 @@
     name: "pen"
 
 - name: jq
-  shell: snap install jq
+  apt:
+    name: "jq"
 
 - name: run lb
-  shell: pen 0.0.0.0:443 127.0.0.1:$(kubectl get svc ingress-nginx-controller  -n ingress-nginx -o json | /snap/bin/jq '.spec.ports[] | select(.targetPort=="https") | .nodePort')
+  shell: pen 0.0.0.0:443 127.0.0.1:$(kubectl get svc ingress-nginx-controller  -n ingress-nginx -o json | /usr/bin/jq '.spec.ports[] | select(.targetPort=="https") | .nodePort')
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
