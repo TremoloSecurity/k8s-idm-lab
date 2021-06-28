@@ -32,14 +32,14 @@
   wait_for_connection:
     timeout: 300
 
-- name: copy docker install script
+- name: copy containerd install script
   copy:
-    src: ./deploydocker.sh
-    dest: /root/deploydocker.sh
+    src: ./deploycontainerd.sh
+    dest: /root/deploycontainerd.sh
     mode: u=rwx,g=rwx
 
-- name: run docker install
-  shell: /root/deploydocker.sh
+- name: run containerd install
+  shell: /root/deploycontainerd.sh
 
 - name: copy k8s install script
   copy:
