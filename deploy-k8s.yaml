@@ -5,8 +5,13 @@
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
-- name: neable run on master
+- name: enable run on master
   shell: kubectl taint nodes --all node-role.kubernetes.io/master-
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: enable run on control-plane
+  shell: kubectl taint nodes --all node-role.kubernetes.io/control-plane-
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
