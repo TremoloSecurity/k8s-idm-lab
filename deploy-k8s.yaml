@@ -22,7 +22,7 @@
     KUBECONFIG: /etc/kubernetes/admin.conf
 
 - name: dashboard
-  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
+  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
       
