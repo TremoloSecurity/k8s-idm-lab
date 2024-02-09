@@ -5,6 +5,6 @@
     
     
     tasks:
-      - include: deploy-master.yaml
-      - include: deploy-k8s.yaml
-      - include: ingress_setup.yaml
+      - include_tasks: deploy-master.yaml
+      - include_tasks: deploy-k8s.yaml
+      - include_tasks: ingress_setup.yaml
